@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "./flutter"
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			"flutter": true
+		},
+		"cmake.ignoreCMakeListsMissing": true
+	}
+}
