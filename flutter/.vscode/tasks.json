@@ -1,0 +1,56 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Flutter: Clean build",
+            "detail": "",
+            "type": "flutter",
+            "command": "flutter",
+            "args": [
+                "clean"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "Flutter: Get dependencies",
+            "detail": "",
+            "type": "flutter",
+            "command": "flutter",
+            "args": [
+                "pub",
+                "get"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "Flutter: Build build-runner",
+            "detail": "",
+            "type": "dart",
+            "command": "dart",
+            "args": [
+                "run",
+                "build_runner",
+                "build",
+                "--delete-conflicting-outputs"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "Flutter: Watch build-runner",
+            "detail": "",
+            "type": "dart",
+            "command": "dart",
+            "args": [
+                "run",
+                "build_runner",
+                "watch",
+                "--delete-conflicting-outputs"
+            ],
+            "group": "build",
+            "problemMatcher": []
+        }
+    ]
+}
