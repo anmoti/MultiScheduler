@@ -11,6 +11,9 @@
 		"files.exclude": {
 			"flutter": true
 		},
-		"cmake.ignoreCMakeListsMissing": true
+		"cmake.ignoreCMakeListsMissing": true,
+		"cSpell.words": [
+			"notoSans"
+		]
 	}
 }

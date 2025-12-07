@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:multi_scheduler/router/router.dart';
 
 void main() {
@@ -12,7 +13,10 @@ class MyApp extends StatelessWidget {
   Widget build(context) {
     return MaterialApp.router(
       routerConfig: router,
-      theme: .from(colorScheme: .fromSeed(seedColor: Colors.lightGreen)),
+      theme: ThemeData.from(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.lightGreen),
+        textTheme: GoogleFonts.notoSansJpTextTheme(Theme.of(context).textTheme),
+      ),
     );
   }
 }
