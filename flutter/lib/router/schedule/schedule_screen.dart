@@ -30,7 +30,11 @@ class _CalendarWidgetState extends State<CalendarWidget> {
     return Column(
       children: [
         CalendarHeader(firstDayOfWeek: _firstDayOfWeek),
-        MonthView(firstDayOfWeek: _firstDayOfWeek, year: 2025, month: 12),
+        MonthView(
+          firstDayOfWeek: _firstDayOfWeek,
+          startDate: DateTime(2025, 11, 1),
+          endDate: DateTime(2025, 12, 31),
+        ),
       ],
     );
   }
@@ -70,6 +74,7 @@ class CalendarHeader extends StatelessWidget {
                   ),
                 ),
               ),
+
               if (weekDay != firstDayOfWeek.previous())
                 VerticalDivider(
                   width: 1,
@@ -98,14 +103,14 @@ class CalendarHeader extends StatelessWidget {
 class MonthView extends StatelessWidget {
   MonthView({
     required this.firstDayOfWeek,
-    required this.year,
-    required this.month,
+    required this.startDate,
+    required this.endDate,
     super.key,
   });
 
   final WeekDay firstDayOfWeek;
-  final int year;
-  final int month;
+  final DateTime startDate;
+  final DateTime endDate;
 
   final List<Event> events = [
     Event(
@@ -142,94 +147,77 @@ class MonthView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    DateTime day = DateTime(year, month, 1);
-    day = day.subtract(
-      Duration(days: (day.weekday % 7 - firstDayOfWeek.id + 7) % 7),
+    final int offset = (startDate.weekday - firstDayOfWeek.id) % 7;
+    final DateTime firstVisibleDate = startDate.subtract(
+      Duration(days: offset),
     );
+    final int weekLength = (endDate.difference(firstVisibleDate).inDays / 7)
+        .ceil();
 
     return Column(
-      children: [
-        for (int week = 0; week < 6; week++)
-          IntrinsicHeight(
-            child: Expanded(
-              child: Row(
-                children: [
-                  for (
-                    int i = 0;
-                    i < 7;
-                    i++, day = day.add(const Duration(days: 1))
-                  ) ...[
-                    Expanded(
-                      child: Opacity(
-                        opacity: day.month == month ? 1.0 : 0.4,
-                        child: Column(
-                          children: [
-                            Text(
-                              '${day.day}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: _getDayColor(WeekDay.fromDateTime(day)),
-                              ),
-                            ),
-                            for (Event event in events.where((event) {
-                              final eventStart = DateTime(
-                                event.start.year,
-                                event.start.month,
-                                event.start.day,
-                              );
-                              final eventEnd = DateTime(
-                                event.end.year,
-                                event.end.month,
-                                event.end.day,
-                              );
-                              final currentDay = DateTime(
-                                day.year,
-                                day.month,
-                                day.day,
-                              );
+      children: List.generate(weekLength, (week) {
+        return IntrinsicHeight(
+          child: Row(
+            children: List.generate(7, (day) {
+              final date = firstVisibleDate.add(Duration(days: week * 7 + day));
 
-                              // 現在のセル(currentDay)が、イベント期間内(start以上 end以下)に含まれるか判定
-                              return currentDay.compareTo(eventStart) >= 0 &&
-                                  currentDay.compareTo(eventEnd) <= 0;
-                            }))
-                              Container(
-                                margin: const EdgeInsets.symmetric(vertical: 2),
-                                padding: const EdgeInsets.all(4),
-                                decoration: BoxDecoration(
-                                  color: event.color,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  event.title,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 1,
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    if (i < 6)
-                      VerticalDivider(
-                        width: 1,
-                        thickness: 1,
-                        color: Theme.of(context).colorScheme.inversePrimary,
-                      ),
-                  ],
-                ],
-              ),
-            ),
+              return Expanded(child: _buildDayCell(context, date));
+            }),
           ),
-      ],
+        );
+      }),
     );
   }
 
-  Color? _getDayColor(WeekDay weekDay) {
-    switch (weekDay) {
+  Widget _buildDayCell(BuildContext context, DateTime date) {
+    final dayEvents = events.where((e) => _isDateInRange(date, e.start, e.end));
+
+    final backgroundColor = date.month % 2 == 0
+        ? Colors.transparent
+        : Theme.of(context).colorScheme.onSurface.withAlpha(15);
+
+    return Container(
+      color: backgroundColor,
+      child: Opacity(
+        opacity: _isDateInRange(date, startDate, endDate) ? 1.0 : 0.4,
+        child: Column(
+          children: [
+            Text(
+              '${date.day}',
+              style: TextStyle(fontSize: 12, color: _getDayColor(date)),
+            ),
+            ...dayEvents.map(
+              (e) => Container(
+                width: double.infinity,
+                margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: e.color,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  e.title,
+                  style: const TextStyle(color: Colors.white, fontSize: 10),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  bool _isDateInRange(DateTime target, DateTime start, DateTime end) {
+    final t = DateTime(target.year, target.month, target.day);
+    final s = DateTime(start.year, start.month, start.day);
+    final e = DateTime(end.year, end.month, end.day);
+    return t.compareTo(s) >= 0 && t.compareTo(e) <= 0;
+  }
+
+  Color? _getDayColor(DateTime date) {
+    switch (WeekDay.fromDateTime(date)) {
       case WeekDay.sunday:
         return Colors.red;
       case WeekDay.saturday:
