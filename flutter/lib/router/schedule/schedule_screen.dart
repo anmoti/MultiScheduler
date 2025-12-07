@@ -30,7 +30,7 @@ class _CalendarWidgetState extends State<CalendarWidget> {
     return Column(
       children: [
         CalendarHeader(firstDayOfWeek: _firstDayOfWeek),
-        MonthView(
+        RangeView(
           firstDayOfWeek: _firstDayOfWeek,
           startDate: DateTime(2025, 11, 1),
           endDate: DateTime(2025, 12, 31),
@@ -100,8 +100,8 @@ class CalendarHeader extends StatelessWidget {
   }
 }
 
-class MonthView extends StatelessWidget {
-  MonthView({
+class RangeView extends StatelessWidget {
+  RangeView({
     required this.firstDayOfWeek,
     required this.startDate,
     required this.endDate,
@@ -176,34 +176,60 @@ class MonthView extends StatelessWidget {
         ? Colors.transparent
         : Theme.of(context).colorScheme.onSurface.withAlpha(15);
 
-    return Container(
-      color: backgroundColor,
-      child: Opacity(
-        opacity: _isDateInRange(date, startDate, endDate) ? 1.0 : 0.4,
-        child: Column(
-          children: [
-            Text(
-              '${date.day}',
-              style: TextStyle(fontSize: 12, color: _getDayColor(date)),
-            ),
-            ...dayEvents.map(
-              (e) => Container(
-                width: double.infinity,
-                margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: e.color,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(
-                  e.title,
-                  style: const TextStyle(color: Colors.white, fontSize: 10),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                ),
+    return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: 75),
+      child: Container(
+        color: backgroundColor,
+        child: Opacity(
+          opacity: _isDateInRange(date, startDate, endDate) ? 1.0 : 0.4,
+          child: Column(
+            spacing: 4,
+            children: [
+              Text(
+                '${date.day}',
+                style: TextStyle(fontSize: 12, color: _getDayColor(date)),
               ),
-            ),
-          ],
+              ...dayEvents.map((e) {
+                final isPrevDayInEvent = _isDateInRange(
+                  date.subtract(const Duration(days: 1)),
+                  e.start,
+                  e.end,
+                );
+                final isNextDayInEvent = _isDateInRange(
+                  date.add(const Duration(days: 1)),
+                  e.start,
+                  e.end,
+                );
+
+                return Container(
+                  width: double.infinity,
+                  margin: EdgeInsets.only(
+                    left: isPrevDayInEvent ? 0 : 2,
+                    right: isNextDayInEvent ? 0 : 2,
+                  ),
+                  padding: EdgeInsets.only(
+                    top: 4,
+                    bottom: 4,
+                    left: isPrevDayInEvent ? 6 : 4,
+                    right: isNextDayInEvent ? 6 : 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: e.color,
+                    borderRadius: BorderRadius.horizontal(
+                      left: Radius.circular(isPrevDayInEvent ? 0 : 4),
+                      right: Radius.circular(isNextDayInEvent ? 0 : 4),
+                    ),
+                  ),
+                  child: Text(
+                    e.title,
+                    style: const TextStyle(color: Colors.white, fontSize: 10),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
+                );
+              }),
+            ],
+          ),
         ),
       ),
     );
