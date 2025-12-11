@@ -1,5 +1,18 @@
 import 'dart:ui';
 
+bool isIncludeRange(
+  DateTime start,
+  DateTime end,
+  DateTime rangeStart,
+  DateTime rangeEnd,
+) {
+  return !(end.isBefore(rangeStart) || start.isAfter(rangeEnd));
+}
+
+bool isIncludeTime(DateTime date, DateTime start, DateTime end) {
+  return isIncludeRange(date, date, start, end);
+}
+
 class Event {
   final String title;
   final DateTime start;
@@ -7,6 +20,10 @@ class Event {
   final Color color;
 
   Event(this.title, this.start, this.end, this.color);
+
+  bool isInclude(DateTime start, DateTime end) {
+    return isIncludeRange(this.start, this.end, start, end);
+  }
 }
 
 enum WeekDay {
@@ -30,6 +47,14 @@ enum WeekDay {
 
   WeekDay next({int step = 1}) {
     return WeekDay.fromId((id + step) % 7);
+  }
+
+  int difference(WeekDay other) {
+    return (other.id - id + 7) % 7;
+  }
+
+  int differenceFromDate(DateTime other) {
+    return (other.weekday % 7 - id + 7) % 7;
   }
 
   static WeekDay fromId(int id) {

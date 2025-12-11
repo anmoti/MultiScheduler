@@ -9,17 +9,17 @@ class CalendarWidget extends StatefulWidget {
 }
 
 class _CalendarWidgetState extends State<CalendarWidget> {
-  static const WeekDay _firstDayOfWeek = WeekDay.sunday;
+  static const WeekDay _startOfWeek = WeekDay.sunday;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        CalendarHeader(firstDayOfWeek: _firstDayOfWeek),
+        CalendarHeader(startOfWeek: _startOfWeek),
         CalendarRangeView(
-          firstDayOfWeek: _firstDayOfWeek,
-          startDate: DateTime(2025, 11, 1),
-          endDate: DateTime(2025, 12, 31),
+          startOfWeek: _startOfWeek,
+          startDate: DateTime(2025, 11, 7),
+          endDate: DateTime(2025, 12, 1),
         ),
       ],
     );
@@ -27,13 +27,13 @@ class _CalendarWidgetState extends State<CalendarWidget> {
 }
 
 class CalendarHeader extends StatelessWidget {
-  const CalendarHeader({required this.firstDayOfWeek, super.key});
+  const CalendarHeader({required this.startOfWeek, super.key});
 
-  final WeekDay firstDayOfWeek;
+  final WeekDay startOfWeek;
 
   @override
   Widget build(BuildContext context) {
-    WeekDay weekDay = firstDayOfWeek;
+    WeekDay weekDay = startOfWeek;
 
     return Container(
       color: Theme.of(context).colorScheme.secondaryContainer,
@@ -43,7 +43,7 @@ class CalendarHeader extends StatelessWidget {
           children: [
             for (
               int i = 0;
-              i == 0 || weekDay != firstDayOfWeek;
+              i == 0 || weekDay != startOfWeek;
               i++, weekDay = weekDay.next()
             ) ...[
               Expanded(
@@ -61,7 +61,7 @@ class CalendarHeader extends StatelessWidget {
                 ),
               ),
 
-              if (weekDay != firstDayOfWeek.previous())
+              if (weekDay != startOfWeek.previous())
                 VerticalDivider(
                   width: 1,
                   thickness: 1,
@@ -76,10 +76,10 @@ class CalendarHeader extends StatelessWidget {
 
   Color? _getDayColor(WeekDay label) {
     switch (label) {
-      case WeekDay.sunday:
-        return Colors.red;
       case WeekDay.saturday:
         return Colors.blue;
+      case WeekDay.sunday:
+        return Colors.red;
       default:
         return null; // テーマのデフォルト色を使用
     }
@@ -88,13 +88,13 @@ class CalendarHeader extends StatelessWidget {
 
 class CalendarRangeView extends StatelessWidget {
   CalendarRangeView({
-    required this.firstDayOfWeek,
+    required this.startOfWeek,
     required this.startDate,
     required this.endDate,
     super.key,
   });
 
-  final WeekDay firstDayOfWeek;
+  final WeekDay startOfWeek;
   final DateTime startDate;
   final DateTime endDate;
 
@@ -107,7 +107,7 @@ class CalendarRangeView extends StatelessWidget {
     ),
     Event(
       '旅行',
-      DateTime(2025, 12, 1, 9, 0),
+      DateTime(2025, 11, 1, 9, 0),
       DateTime(2025, 12, 3, 10, 0),
       Colors.purple,
     ),
@@ -131,101 +131,218 @@ class CalendarRangeView extends StatelessWidget {
     ),
   ];
 
+  static const double _dateHeaderHeight = 20.0;
+  static const double _eventHeight = 20.0;
+  static const double _eventMargin = 2.0;
+  static const double _outOfRangeOpacity = 0.4;
+
   @override
   Widget build(BuildContext context) {
-    final int offset = (startDate.weekday - firstDayOfWeek.id) % 7;
-    final DateTime firstVisibleDate = startDate.subtract(
-      Duration(days: offset),
-    );
-    final int weekLength = (endDate.difference(firstVisibleDate).inDays / 7)
+    final int offset = startOfWeek.differenceFromDate(startDate);
+    final int weekLength = ((offset + endDate.difference(startDate).inDays) / 7)
         .ceil();
 
     return Column(
-      children: List.generate(weekLength, (week) {
-        return IntrinsicHeight(
-          child: Row(
-            children: List.generate(7, (day) {
-              final date = firstVisibleDate.add(Duration(days: week * 7 + day));
+      children: List.generate(weekLength, (i) {
+        final weekStartTime = startDate.add(Duration(days: (i * 7) - offset));
 
-              return Expanded(child: _buildDayCell(context, date));
-            }),
-          ),
-        );
+        return _buildWeekRow(context, weekStartTime);
       }),
     );
   }
 
-  Widget _buildDayCell(BuildContext context, DateTime date) {
-    final dayEvents = events.where((e) => _isDateInRange(date, e.start, e.end));
+  Widget _buildWeekRow(BuildContext context, DateTime weekStartTime) {
+    final weekEndTime = weekStartTime.add(
+      const Duration(days: 7, microseconds: -1),
+    );
 
-    final backgroundColor = date.month % 2 == 0
-        ? Colors.transparent
-        : Theme.of(context).colorScheme.onSurface.withAlpha(15);
+    // イベントをフィルタリング
+    final weekEvents = events
+        .where((e) => e.isInclude(weekStartTime, weekEndTime))
+        .toList();
 
-    return ConstrainedBox(
-      constraints: BoxConstraints(minHeight: 75),
-      child: Container(
-        color: backgroundColor,
-        child: Opacity(
-          opacity: _isDateInRange(date, startDate, endDate) ? 1.0 : 0.4,
-          child: Column(
-            spacing: 3,
-            children: [
-              Text(
-                '${date.day}',
-                style: TextStyle(fontSize: 12, color: _getDayColor(date)),
-              ),
-              ...dayEvents.map((e) {
-                final isPrevDayInEvent = _isDateInRange(
-                  date.subtract(const Duration(days: 1)),
-                  e.start,
-                  e.end,
-                );
-                final isNextDayInEvent = _isDateInRange(
-                  date.add(const Duration(days: 1)),
-                  e.start,
-                  e.end,
-                );
+    // イベントの表示位置を計算
+    final layoutEvents = _calculateEventLayout(
+      weekEvents,
+      weekStartTime,
+      weekEndTime,
+    );
 
-                return Container(
-                  width: double.infinity,
-                  margin: EdgeInsets.only(
-                    left: isPrevDayInEvent ? 0 : 2,
-                    right: isNextDayInEvent ? 0 : 2,
-                  ),
-                  padding: EdgeInsets.only(
-                    top: 2,
-                    bottom: 2,
-                    left: isPrevDayInEvent ? 6 : 4,
-                    right: isNextDayInEvent ? 6 : 4,
-                  ),
+    final laneLength = layoutEvents.fold(
+      2,
+      (prev, e) => e.lane + 1 > prev ? e.lane + 1 : prev,
+    );
+    final rowHeight =
+        _dateHeaderHeight + laneLength * (_eventHeight + _eventMargin);
+
+    return SizedBox(
+      height: rowHeight,
+      child: Stack(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: List.generate(7, (dayIndex) {
+              final date = weekStartTime.add(Duration(days: dayIndex));
+              return Expanded(
+                child: Container(
                   decoration: BoxDecoration(
-                    color: e.color,
-                    borderRadius: BorderRadius.horizontal(
-                      left: Radius.circular(isPrevDayInEvent ? 0 : 4),
-                      right: Radius.circular(isNextDayInEvent ? 0 : 4),
+                    color: date.month % 2 == 0
+                        ? Colors.transparent
+                        : Theme.of(context).colorScheme.onSurface.withAlpha(15),
+                  ),
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 0),
+                      child: Opacity(
+                        opacity: isIncludeTime(date, startDate, endDate)
+                            ? 1.0
+                            : _outOfRangeOpacity,
+                        child: Text(
+                          '${date.day}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _getDayColor(date),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  child: Text(
-                    e.title,
-                    style: const TextStyle(color: Colors.white, fontSize: 10),
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                  ),
-                );
-              }),
-            ],
+                ),
+              );
+            }),
           ),
-        ),
+
+          LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final dayWidth = constraints.maxWidth / 7;
+
+              return Stack(
+                children: layoutEvents.map((layoutEvent) {
+                  return _buildEventWidget(
+                    layoutEvent: layoutEvent,
+                    dayWidth: dayWidth,
+                    weekStartTime: weekStartTime,
+                    weekEndTime: weekEndTime,
+                  );
+                }).toList(),
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 
-  bool _isDateInRange(DateTime target, DateTime start, DateTime end) {
-    final t = DateTime(target.year, target.month, target.day);
-    final s = DateTime(start.year, start.month, start.day);
-    final e = DateTime(end.year, end.month, end.day);
-    return t.compareTo(s) >= 0 && t.compareTo(e) <= 0;
+  /// イベントの重複を計算し、表示するレーンを割り当てる
+  List<_LayoutEvent> _calculateEventLayout(
+    List<Event> events,
+    DateTime weekStartTime,
+    DateTime weekEndTime,
+  ) {
+    // 開始日時が早い、期間が長い順にソートする
+    events.sort((a, b) {
+      int result = a.start.compareTo(b.start);
+      if (result == 0) return b.end.compareTo(a.end);
+
+      return result;
+    });
+
+    final List<_LayoutEvent> layoutEvents = [];
+
+    // 各レーンの最後の日付を保持するリスト (indexがレーン番号)
+    final List<DateTime> lanesLastDate = [];
+
+    for (final event in events) {
+      final startTime = event.start.isBefore(weekStartTime)
+          ? weekStartTime
+          : event.start;
+      final endTime = event.end.isAfter(weekEndTime) ? weekEndTime : event.end;
+
+      final startDate = DateTime(
+        startTime.year,
+        startTime.month,
+        startTime.day,
+      );
+      final endDate = DateTime(endTime.year, endTime.month, endTime.day);
+
+      final offsetDays = startDate.difference(weekStartTime).inDays;
+      int durationDays = endDate.difference(startDate).inDays + 1;
+      // durationがはみ出る場合の補正
+      if ((offsetDays + durationDays) > 7) {
+        durationDays = 7 - offsetDays;
+      }
+
+      // 空いているレーンを探す
+      int laneIndex = -1;
+      for (int i = 0; i < lanesLastDate.length; i++) {
+        // このレーンの最終予定より、今回の開始日時が後なら置ける
+        if (lanesLastDate[i].isBefore(startDate)) {
+          laneIndex = i;
+          lanesLastDate[i] = endDate;
+          break;
+        }
+      }
+
+      // 空きレーンがなければ新しいレーンを追加
+      if (laneIndex == -1) {
+        laneIndex = lanesLastDate.length;
+        lanesLastDate.add(endDate);
+      }
+
+      layoutEvents.add(
+        _LayoutEvent(
+          event: event,
+          offsetDays: offsetDays,
+          durationDays: durationDays,
+          lane: laneIndex,
+        ),
+      );
+    }
+
+    return layoutEvents;
+  }
+
+  Widget _buildEventWidget({
+    required _LayoutEvent layoutEvent,
+    required double dayWidth,
+    required DateTime weekStartTime,
+    required DateTime weekEndTime,
+  }) {
+    final event = layoutEvent.event;
+
+    final top =
+        _dateHeaderHeight + (layoutEvent.lane * (_eventHeight + _eventMargin));
+
+    final left = layoutEvent.offsetDays * dayWidth;
+    final width = layoutEvent.durationDays * dayWidth;
+
+    final hoge1 = event.start.isBefore(weekStartTime);
+    final hoge2 = event.end.isAfter(weekEndTime);
+
+    return Positioned(
+      top: top,
+      left: left,
+      width: width,
+      height: _eventHeight,
+      child: Container(
+        margin: EdgeInsets.only(left: hoge1 ? 0 : 2, right: hoge2 ? 0 : 2),
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          color: event.color,
+          borderRadius: BorderRadius.horizontal(
+            left: Radius.circular(hoge1 ? 0 : 4),
+            right: Radius.circular(hoge2 ? 0 : 4),
+          ),
+        ),
+        child: Text(
+          event.title,
+          style: const TextStyle(color: Colors.white, fontSize: 12),
+          overflow: TextOverflow.ellipsis,
+          maxLines: 1,
+        ),
+      ),
+    );
   }
 
   Color? _getDayColor(DateTime date) {
@@ -238,4 +355,19 @@ class CalendarRangeView extends StatelessWidget {
         return null;
     }
   }
+}
+
+// レイアウト計算用の内部クラス
+class _LayoutEvent {
+  final Event event;
+  final int offsetDays;
+  final int durationDays;
+  final int lane;
+
+  _LayoutEvent({
+    required this.event,
+    required this.offsetDays,
+    required this.durationDays,
+    required this.lane,
+  });
 }
