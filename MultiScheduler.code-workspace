@@ -5,15 +5,16 @@
 		},
 		{
 			"path": "./flutter"
+		},
+		{
+			"path": "./backend"
 		}
 	],
 	"settings": {
 		"files.exclude": {
-			"flutter": true
+			"flutter": true,
+			"backend": true
 		},
-		"cmake.ignoreCMakeListsMissing": true,
-		"cSpell.words": [
-			"notoSans"
-		]
+		"cmake.ignoreCMakeListsMissing": true
 	}
 }
