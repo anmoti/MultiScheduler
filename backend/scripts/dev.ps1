@@ -1,3 +1,5 @@
 .\.venv\Scripts\activate.ps1
 
-uvicorn main:app --reload
+$env:ENV="dev"
+
+uvicorn main:app --app-dir src --reload-dir src --reload
