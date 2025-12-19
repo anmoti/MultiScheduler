@@ -1,8 +1,24 @@
 {
+    "[python]": {
+        "editor.formatOnType": true,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit",
+        },
+    },
     "python.analysis.autoImportCompletions": true,
     "cSpell.words": [
         "ASGI",
         "customise",
-        "dotenv"
+        "dotenv",
+        "fastapi",
+        "isort",
+        "mypy",
+        "pydantic",
+        "pyupgrade",
+        "sqlmodel",
+        "structlog",
+        "uvicorn"
     ]
 }

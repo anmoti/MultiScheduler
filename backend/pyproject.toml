@@ -17,3 +17,57 @@ dependencies = [
 
 [tool.mypy]
 plugins = ["pydantic.mypy"]
+
+[tool.ruff.lint]
+select = [
+    # 基本ルール
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "F",     # pyflakes
+
+    # インポートと型
+    "I",     # isort
+    "UP",    # pyupgrade
+    "TC",    # flake8-type-checking
+
+    # コード品質
+    "B",     # flake8-bugbear
+    "SIM",   # flake8-simplify
+    "C4",    # flake8-comprehensions
+    "PTH",   # flake8-use-pathlib
+
+    # 命名とドキュメント
+    "N",     # pep8-naming
+    "D2",    # pydocstyle
+    "D3",
+    "D413",
+    "D419",
+    "A",     # flake8-builtins
+
+    # 非同期処理
+    "ASYNC", # flake8-async"
+
+    # パフォーマンス
+    "PERF",  # Perflint
+
+    # フレームワーク
+    "FAST",  # FastAPI
+
+    # その他
+    "ERA",   # eradicate
+    "ARG",   # flake8-unused-arguments
+    "RET",   # flake8-return
+    "PL",    # Pylint
+    "RUF",   # Ruff-specific rules
+]
+
+[tool.ruff.lint.pyupgrade]
+keep-runtime-typing = false
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+lines-after-imports = 2
+
+[tool.ruff.format]
+preview = true
+docstring-code-format = true
