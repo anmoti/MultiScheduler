@@ -13,7 +13,7 @@ from starlette.applications import ASGIApp
 from starlette.responses import JSONResponse
 from starlette.types import Receive, Scope, Send
 
-from core import settings
+from core.config import settings
 
 EVENT = "event"
 EXTRA = "extra"
