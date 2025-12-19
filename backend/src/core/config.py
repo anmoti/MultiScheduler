@@ -1,7 +1,7 @@
 import json
 import os
 import subprocess
-from typing import Any, Type
+from typing import Any
 
 from pydantic import Field, HttpUrl, PostgresDsn
 from pydantic_settings import (
@@ -9,8 +9,10 @@ from pydantic_settings import (
     PydanticBaseSettingsSource,
 )
 
+
 PROD = "prod"
 DEV = "dev"
+
 
 class SupabaseCliSettingsSource(PydanticBaseSettingsSource):
     def get_field_value(self, field, field_name):
@@ -70,11 +72,11 @@ class Settings(BaseSettings):
     @classmethod
     def settings_customise_sources(
         cls,
-        settings_cls: Type[BaseSettings],
+        settings_cls: type[BaseSettings],
         init_settings: PydanticBaseSettingsSource,
         env_settings: PydanticBaseSettingsSource,
         dotenv_settings: PydanticBaseSettingsSource,
-        file_secret_settings: PydanticBaseSettingsSource
+        file_secret_settings: PydanticBaseSettingsSource,
     ) -> tuple[PydanticBaseSettingsSource, ...]:
         return (
             init_settings,
@@ -83,5 +85,6 @@ class Settings(BaseSettings):
             dotenv_settings,
             file_secret_settings,
         )
+
 
 settings = Settings()

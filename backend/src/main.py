@@ -1,7 +1,8 @@
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI, HTTPException
 
-from core.logger import StructLogMiddleware, FastAPIStructLogger
+from core.logger import FastAPIStructLogger, StructLogMiddleware
+
 
 app = FastAPI(title="MultiScheduler API")
 

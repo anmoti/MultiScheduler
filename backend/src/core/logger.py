@@ -2,18 +2,18 @@ import logging
 import math
 import re
 import time
+import urllib
 from typing import Any
 
 import structlog
-from structlog.types import Processor, EventDict
-
-import urllib
 from asgi_correlation_id import correlation_id
 from starlette.applications import ASGIApp
 from starlette.responses import JSONResponse
 from starlette.types import Receive, Scope, Send
+from structlog.types import EventDict, Processor
 
 from core.config import settings
+
 
 EVENT = "event"
 EXTRA = "extra"
@@ -21,9 +21,7 @@ REQUEST_ID = "request_id"
 
 
 def drop_key_processor(key: str) -> Processor:
-    """
-    指定したキーを event_dict から削除するプロセッサを生成します。
-    """
+    """指定したキーを event_dict から削除するプロセッサを生成"""
 
     def processor(_, __, event_dict: EventDict):
         event_dict.pop(key, None)
@@ -34,9 +32,7 @@ def drop_key_processor(key: str) -> Processor:
 
 
 def request_id_shortener_processor(_, __, event_dict: EventDict):
-    """
-    REQUEST_ID を短縮して表示するプロセッサ
-    """
+    """REQUEST_ID を短縮して表示するプロセッサ"""
     request_id = event_dict.pop(REQUEST_ID, None)
     if request_id:
         event_dict["req_id"] = str(request_id)[:8]
@@ -44,10 +40,7 @@ def request_id_shortener_processor(_, __, event_dict: EventDict):
 
 
 def named_placeholder_processor(_, __, event_dict: EventDict):
-    """
-    {key} 形式のプレースホルダーを値に置換
-    """
-
+    """{key} 形式のプレースホルダーを値に置換"""
     event = str(event_dict.get(EVENT, ""))
     extra = event_dict.get(EXTRA, {})
     if not isinstance(extra, dict):
@@ -64,17 +57,16 @@ def named_placeholder_processor(_, __, event_dict: EventDict):
             value = str(event_dict.pop(key))
         elif key in extra:
             value = str(extra.pop(key))
-        else:
-            # ネストされたキーを探す
-            if "." in key:
-                parts = key.split(".")
-                current = extra
-                try:
-                    for part in parts[:-1]:
-                        current = current[part]
-                    value = str(current.pop(parts[-1]))
-                except (KeyError, TypeError):
-                    continue
+        # ネストされたキーを探す
+        elif "." in key:
+            parts = key.split(".")
+            current = extra
+            try:
+                for part in parts[:-1]:
+                    current = current[part]
+                value = str(current.pop(parts[-1]))
+            except (KeyError, TypeError):
+                continue
 
         if value is not None:
             event = event.replace(f"{{{key}}}", value)
@@ -84,11 +76,7 @@ def named_placeholder_processor(_, __, event_dict: EventDict):
 
 
 def setup_logging() -> None:
-    """
-    structlog の動作（プロセッサ、レンダラー）を定義し、
-    標準の Python logging モジュールと統合します。
-    """
-
+    """structlogの動作を定義し、loggingと統合"""
     shared_processors: list[Processor] = [
         structlog.contextvars.merge_contextvars,
         structlog.stdlib.add_logger_name,
@@ -119,8 +107,8 @@ def setup_logging() -> None:
         )
 
     structlog.configure(
-        processors=shared_processors
-        + [
+        processors=[
+            *shared_processors,
             structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
         ],
         logger_factory=structlog.stdlib.LoggerFactory(),
@@ -136,7 +124,7 @@ def setup_logging() -> None:
         ],
     )
 
-    # ルートロガーの設定：すべてのログを structlog のフォーマッタ経由で出力させる
+    # ルートロガーの設定: すべてのログを structlog のフォーマッタ経由で出力させる
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
     root_logger = logging.getLogger()
@@ -157,20 +145,15 @@ setup_logging()
 
 
 class FastAPIStructLogger:
-    """
-    structlog を使いやすくするための薄いラッパーです。
-    contextvars を利用して、リクエストごとのコンテキスト変数を管理します。
-    """
-
     def __init__(self, log_name=settings.LOG_NAME):
         self.logger = structlog.stdlib.get_logger(log_name)
 
     def bind(self, **new_values: Any):
-        """ログにコンテキスト情報をバインドします。"""
+        """ログにコンテキスト情報をバインド"""
         structlog.contextvars.bind_contextvars(**new_values)
 
     def unbind(self, *keys: str):
-        """指定したキーのバインドを解除します。"""
+        """ログのコンテキスト情報をアンバインド"""
         structlog.contextvars.unbind_contextvars(*keys)
 
     def debug(self, event: str, **kw: Any):
@@ -190,11 +173,11 @@ class FastAPIStructLogger:
 
 
 class StructLogMiddleware:
-    """
-    各リクエストの開始・終了時に動作するミドルウェアです。
-    - Request ID (correlation_id) の取得とバインド
+    """各リクエストの開始・終了時に動作するミドルウェア
+
+    - REQUEST_ID(correlation_id)の取得とバインド
     - 未処理例外のキャッチと構造化ログへの出力
-    - アクセスログ（URL, ステータスコード, 処理時間など）の出力
+    - アクセスログの出力
     """
 
     def __init__(self, app: ASGIApp):
@@ -211,8 +194,10 @@ class StructLogMiddleware:
         structlog.contextvars.clear_contextvars()
 
         # Request ID を取得してログに紐付け
-        req_id = correlation_id.get()
-        structlog.contextvars.bind_contextvars(request_id=req_id)
+        request_id = correlation_id.get()
+        structlog.contextvars.bind_contextvars({
+            REQUEST_ID: request_id,
+        })
 
         start_time_ns = time.perf_counter_ns()
         status_code = 500  # デフォルト
@@ -260,7 +245,13 @@ class StructLogMiddleware:
 
             # アクセスログを構造化データとして出力
             self.access_logger.info(
-                f"{{client.ip}}@{{req_id}} {{http.method}} {{http.status_code}} {path} {process_time_ms}ms",
+                " ".join([
+                    "{client.ip}@{req_id}",
+                    "{http.method}",
+                    "{http.status_code}",
+                    path,
+                    f"{process_time_ms}ms",
+                ]),
                 extra={
                     "http": {
                         "url": str(url),
