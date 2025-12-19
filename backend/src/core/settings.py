@@ -12,7 +12,6 @@ from pydantic_settings import (
 PROD = "prod"
 DEV = "dev"
 
-
 class SupabaseCliSettingsSource(PydanticBaseSettingsSource):
     def get_field_value(self, field, field_name):
         return super().get_field_value(field, field_name)
@@ -56,16 +55,17 @@ class SupabaseCliSettingsSource(PydanticBaseSettingsSource):
 class Settings(BaseSettings):
     env: str = Field(PROD, validation_alias="ENV")
 
-    database_url: PostgresDsn = Field(..., validation_alias="DATABASE_URL")
-    supabase_url: HttpUrl = Field(..., validation_alias="SUPABASE_URL")
-    supabase_publishable_key: str = Field(
-        ..., validation_alias="SUPABASE_PUBLISHABLE_KEY"
-    )
-    supabase_secret_key: str = Field(..., validation_alias="SUPABASE_SECRET_KEY")
-    supabase_service_role_key: str = Field(
-        ..., validation_alias="SUPABASE_SERVICE_ROLE_KEY"
-    )
-    supabase_jwt_secret: str = Field(..., validation_alias="SUPABASE_JWT_SECRET")
+    LOG_LEVEL: str = "DEBUG"
+    LOG_JSON_FORMAT: bool = False
+    LOG_NAME: str = "app.logs"
+    LOG_ACCESS_NAME: str = "app.access_logs"
+    LOG_INCLUDE_STACK: bool = False
+    DATABASE_URL: PostgresDsn = Field(...)
+    SUPABASE_URL: HttpUrl = Field(...)
+    SUPABASE_PUBLISHABLE_KEY: str = Field(...)
+    SUPABASE_SECRET_KEY: str = Field(...)
+    SUPABASE_SERVICE_ROLE_KEY: str = Field(...)
+    SUPABASE_JWT_SECRET: str = Field(...)
 
     @classmethod
     def settings_customise_sources(
@@ -83,3 +83,5 @@ class Settings(BaseSettings):
             dotenv_settings,
             file_secret_settings,
         )
+
+settings = Settings()

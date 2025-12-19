@@ -1,3 +1,4 @@
-from .settings import Settings
+from .settings import Settings, settings
+from .logger import FastAPIStructLogger, StructLogMiddleware
 
-settings = Settings() # type: ignore
+__all__ = ["Settings", "settings", "FastAPIStructLogger", "StructLogMiddleware"]
