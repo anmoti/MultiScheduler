@@ -12,7 +12,7 @@ from starlette.responses import JSONResponse
 from starlette.types import Receive, Scope, Send
 from structlog.types import EventDict, Processor
 
-from core.config import settings
+from app.core.config import settings
 
 
 EVENT = "event"
