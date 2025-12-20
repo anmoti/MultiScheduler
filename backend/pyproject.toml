@@ -45,7 +45,7 @@ select = [
     "A",     # flake8-builtins
 
     # 非同期処理
-    "ASYNC", # flake8-async"
+    "ASYNC", # flake8-async
 
     # パフォーマンス
     "PERF",  # Perflint
@@ -59,6 +59,11 @@ select = [
     "RET",   # flake8-return
     "PL",    # Pylint
     "RUF",   # Ruff-specific rules
+]
+
+ignore = [
+    "D203",
+    "D213",
 ]
 
 [tool.ruff.lint.pyupgrade]
