@@ -7,6 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "asgi-correlation-id>=4.3.4",
     "fastapi>=0.124.2",
+    "mypy>=1.19.1",
     "pydantic-settings>=2.12.0",
     "rich>=14.2.0",
     "ruff>=0.14.10",
@@ -16,6 +17,8 @@ dependencies = [
 ]
 
 [tool.mypy]
+strict = true
+
 plugins = ["pydantic.mypy"]
 
 [tool.ruff.lint]
@@ -33,6 +36,7 @@ select = [
 
     # コード品質
     "B",     # flake8-bugbear
+    "C",     # mccabe
     "SIM",   # flake8-simplify
     "C4",    # flake8-comprehensions
     "PTH",   # flake8-use-pathlib
@@ -80,6 +84,9 @@ ban-relative-imports = "all"
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 "core".msg = "Use `app.core` instead of `core`"
 "api".msg = "Use `app.api` instead of `api`"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
 
 [tool.ruff.format]
 preview = true

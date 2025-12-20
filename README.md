@@ -25,6 +25,11 @@ Workspace: `/MultiScheduler.code-workspace`
 - Flutter(fvm)
 - Supabase CLI
 
+依存関係をインストールする。
+```
+uv sync
+```
+
 ### Supabaseの起動
 
 以下のコマンドを `/` で実行する。
