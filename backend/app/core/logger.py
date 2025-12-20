@@ -7,10 +7,9 @@ from typing import Any
 
 import structlog
 from asgi_correlation_id import correlation_id
-from starlette.applications import ASGIApp
 from starlette.responses import JSONResponse
-from starlette.types import Receive, Scope, Send
-from structlog.types import EventDict, Processor
+from starlette.types import ASGIApp, Message, Receive, Scope, Send
+from structlog.types import EventDict, Processor, WrappedLogger
 
 from app.core.config import settings
 
@@ -23,7 +22,9 @@ REQUEST_ID = "request_id"
 def drop_key_processor(key: str) -> Processor:
     """指定したキーを event_dict から削除するプロセッサを生成"""
 
-    def processor(_, __, event_dict: EventDict):
+    def processor(
+        _logger: WrappedLogger, _method_name: str, event_dict: EventDict
+    ) -> EventDict:
         event_dict.pop(key, None)
 
         return event_dict
@@ -31,15 +32,20 @@ def drop_key_processor(key: str) -> Processor:
     return processor
 
 
-def request_id_shortener_processor(_, __, event_dict: EventDict):
+def request_id_shortener_processor(
+    _logger: WrappedLogger, _method_name: str, event_dict: EventDict
+) -> EventDict:
     """REQUEST_ID を短縮して表示するプロセッサ"""
     request_id = event_dict.pop(REQUEST_ID, None)
     if request_id:
         event_dict["req_id"] = str(request_id)[:8]
+
     return event_dict
 
 
-def named_placeholder_processor(_, __, event_dict: EventDict):
+def named_placeholder_processor(
+    _logger: WrappedLogger, _method_name: str, event_dict: EventDict
+) -> EventDict:
     """{key} 形式のプレースホルダーを値に置換"""
     event = str(event_dict.get(EVENT, ""))
     extra = event_dict.get(EXTRA, {})
@@ -72,6 +78,7 @@ def named_placeholder_processor(_, __, event_dict: EventDict):
             event = event.replace(f"{{{key}}}", value)
 
     event_dict[EVENT] = event
+
     return event_dict
 
 
@@ -145,30 +152,30 @@ setup_logging()
 
 
 class FastAPIStructLogger:
-    def __init__(self, log_name=settings.LOG_NAME):
+    def __init__(self, log_name: str = settings.LOG_NAME) -> None:
         self.logger = structlog.stdlib.get_logger(log_name)
 
-    def bind(self, **new_values: Any):
+    def bind(self, **new_values: Any) -> None:
         """ログにコンテキスト情報をバインド"""
         structlog.contextvars.bind_contextvars(**new_values)
 
-    def unbind(self, *keys: str):
+    def unbind(self, *keys: str) -> None:
         """ログのコンテキスト情報をアンバインド"""
         structlog.contextvars.unbind_contextvars(*keys)
 
-    def debug(self, event: str, **kw: Any):
+    def debug(self, event: str, **kw: Any) -> None:
         self.logger.debug(event, **kw)
 
-    def info(self, event: str, **kw: Any):
+    def info(self, event: str, **kw: Any) -> None:
         self.logger.info(event, **kw)
 
-    def warning(self, event: str, **kw: Any):
+    def warning(self, event: str, **kw: Any) -> None:
         self.logger.warning(event, **kw)
 
-    def error(self, event: str, **kw: Any):
+    def error(self, event: str, **kw: Any) -> None:
         self.logger.error(event, **kw)
 
-    def exception(self, event: str, **kw: Any):
+    def exception(self, event: str, **kw: Any) -> None:
         self.logger.exception(event, **kw)
 
 
@@ -195,15 +202,13 @@ class StructLogMiddleware:
 
         # Request ID を取得してログに紐付け
         request_id = correlation_id.get()
-        structlog.contextvars.bind_contextvars({
-            REQUEST_ID: request_id,
-        })
+        structlog.contextvars.bind_contextvars(REQUEST_ID=request_id)
 
         start_time_ns = time.perf_counter_ns()
         status_code = 500  # デフォルト
 
         # ステータスコードをキャプチャするための内部関数
-        async def send_wrapper(message):
+        async def send_wrapper(message: Message) -> None:
             nonlocal status_code
             if message["type"] == "http.response.start":
                 status_code = message["status"]

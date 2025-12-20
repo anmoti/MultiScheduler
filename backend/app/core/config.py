@@ -4,6 +4,7 @@ import subprocess
 from typing import Any
 
 from pydantic import Field, HttpUrl, PostgresDsn
+from pydantic.fields import FieldInfo
 from pydantic_settings import (
     BaseSettings,
     PydanticBaseSettingsSource,
@@ -15,12 +16,17 @@ DEV = "dev"
 
 
 class SupabaseCliSettingsSource(PydanticBaseSettingsSource):
-    def get_field_value(self, field, field_name):
-        return super().get_field_value(field, field_name)
+    def __init__(self, settings_cls: type[BaseSettings]):
+        super().__init__(settings_cls)
+        self._cached_data: dict[str, Any] | None = None
 
     def __call__(self) -> dict[str, Any]:
+        if self._cached_data is not None:
+            return self._cached_data
+
         if os.getenv("ENV") != DEV:
-            return {}
+            self._cached_data = {}
+            return self._cached_data
 
         try:
             # コマンド実行
@@ -41,7 +47,7 @@ class SupabaseCliSettingsSource(PydanticBaseSettingsSource):
                 return url
 
             # CLIのキー名を Settings のフィールド名にマッピング
-            return {
+            self._cached_data = {
                 "DATABASE_URL": fix_host(raw_data.get("DB_URL")),
                 "SUPABASE_URL": fix_host(raw_data.get("API_URL")),
                 "SUPABASE_PUBLISHABLE_KEY": raw_data.get("PUBLISHABLE_KEY"),
@@ -49,9 +55,19 @@ class SupabaseCliSettingsSource(PydanticBaseSettingsSource):
                 "SUPABASE_SERVICE_ROLE_KEY": raw_data.get("SERVICE_ROLE_KEY"),
                 "SUPABASE_JWT_SECRET": raw_data.get("JWT_SECRET"),
             }
+
+            return self._cached_data
         except Exception as e:
             print(f"Supabase CLI settings source error: {e}")
-            return {}
+            self._cached_data = {}
+
+            return self._cached_data
+
+    def get_field_value(self, _field: FieldInfo, field_name: str) -> Any:
+        """指定されたフィールドの値を取得"""
+        settings_data = self()
+
+        return settings_data.get(field_name)
 
 
 class Settings(BaseSettings):

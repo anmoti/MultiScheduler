@@ -13,14 +13,14 @@ log = FastAPIStructLogger()
 
 
 @app.get("/")
-def read_root():
+def read_root() -> dict[str, str]:
     log.info("API called - Hello World")
 
     return {"Hello": "World"}
 
 
 @app.get("/items/{item_id}")
-def read_item(item_id: int):
+def read_item(item_id: int) -> dict[str, int]:
     log.bind(item_id=item_id)
     log.info("Processing item request")
 
@@ -32,7 +32,7 @@ def read_item(item_id: int):
 
 
 @app.get("/error")
-async def trigger_error():
+async def trigger_error() -> dict[str, float]:
     log.info("About to trigger a 500 error")
     result = 1 / 0
 
