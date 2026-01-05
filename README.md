@@ -24,8 +24,11 @@ Workspace: `/MultiScheduler.code-workspace`
 - uv
 - Flutter(fvm)
 - Supabase CLI
+- Docker (Podman)
+   Supabaseの起動に使用(Podmanの場合はデーモン閣下を召喚しておくこと)
 
 依存関係をインストールする。
+
 ```
 uv sync
 ```

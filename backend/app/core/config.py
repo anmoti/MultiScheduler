@@ -31,7 +31,7 @@ class SupabaseCliSettingsSource(PydanticBaseSettingsSource):
         try:
             # コマンド実行
             result = subprocess.run(
-                ["supabase", "status", "--output", "json"],
+                "pnpx supabase status --output json",
                 capture_output=True,
                 text=True,
                 check=True,
