@@ -3,7 +3,7 @@ import os
 import subprocess
 from typing import Any
 
-from pydantic import Field, HttpUrl, PostgresDsn
+from pydantic import Field, HttpUrl, PostgresDsn, field_validator
 from pydantic.fields import FieldInfo
 from pydantic_settings import (
     BaseSettings,
@@ -31,7 +31,7 @@ class SupabaseCliSettingsSource(PydanticBaseSettingsSource):
         try:
             # コマンド実行
             result = subprocess.run(
-                "pnpx supabase status --output json",
+                "pnpm dlx supabase status --output json",
                 capture_output=True,
                 text=True,
                 check=True,
@@ -40,16 +40,10 @@ class SupabaseCliSettingsSource(PydanticBaseSettingsSource):
 
             raw_data = json.loads(result.stdout)
 
-            # Windows対策: 0.0.0.0 を 127.0.0.1 に置換する
-            def fix_host(url: Any) -> Any:
-                if isinstance(url, str):
-                    return url.replace("0.0.0.0", "127.0.0.1")
-                return url
-
             # CLIのキー名を Settings のフィールド名にマッピング
             self._cached_data = {
-                "DATABASE_URL": fix_host(raw_data.get("DB_URL")),
-                "SUPABASE_URL": fix_host(raw_data.get("API_URL")),
+                "DATABASE_URL": raw_data.get("DB_URL"),
+                "SUPABASE_URL": raw_data.get("API_URL"),
                 "SUPABASE_PUBLISHABLE_KEY": raw_data.get("PUBLISHABLE_KEY"),
                 "SUPABASE_SECRET_KEY": raw_data.get("SECRET_KEY"),
                 "SUPABASE_SERVICE_ROLE_KEY": raw_data.get("SERVICE_ROLE_KEY"),
@@ -85,6 +79,14 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_ROLE_KEY: str = Field(...)
     SUPABASE_JWT_SECRET: str = Field(...)
 
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def fix_database_protocol(cls, v: Any) -> Any:
+        """psycopgに対応"""
+        if isinstance(v, str) and v.startswith("postgresql://"):
+            v = v.replace("postgresql://", "postgresql+psycopg://", 1)
+        return v
+
     @classmethod
     def settings_customise_sources(
         cls,
@@ -104,3 +106,5 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+__all__ = ["settings"]

@@ -54,3 +54,11 @@ supabase start
 ### フロントエンドの起動
 
 flutterのデバッグを実行する。
+
+### データベースをマイグレーション
+
+```bash
+ENV=dev uv run alembic revision --autogenerate -m "<message>"
+
+ENV=dev uv run alembic upgrade head
+```
