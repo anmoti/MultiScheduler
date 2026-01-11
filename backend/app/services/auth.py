@@ -15,6 +15,9 @@ log = FastAPIStructLogger("auth_service")
 ACCESS_TOKEN = "access_token"
 REFRESH_TOKEN = "refresh_token"
 
+JWKS_URL = f"{settings.SUPABASE_URL}/auth/v1/.well-known/jwks.json"
+jwks_client = jwt.PyJWKClient(JWKS_URL)
+
 
 def get_access_token_from_header_or_cookie(request: Request) -> str:
     """ヘッダーまたはCookieから `access_token` を取得"""
@@ -58,8 +61,6 @@ def get_current_user_id(access_token: AccessTokenDep) -> str:
 
         if alg == "ES256":
             # ES256の場合はJWKSから公開鍵を取得して検証
-            jwks_url = f"{settings.SUPABASE_URL}/auth/v1/.well-known/jwks.json"
-            jwks_client = jwt.PyJWKClient(jwks_url)
             signing_key = jwks_client.get_signing_key_from_jwt(access_token)
 
             payload = jwt.decode(
