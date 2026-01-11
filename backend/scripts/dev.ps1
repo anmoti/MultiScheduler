@@ -2,4 +2,8 @@
 
 $env:ENV="dev"
 
-uvicorn main:app --app-dir src --reload-dir src --reload
+# データベースのマイグレーション
+alembic upgrade head
+
+# uvicornの起動
+uvicorn app.main:app --reload-dir app --reload

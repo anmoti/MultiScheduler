@@ -7,7 +7,8 @@ from typing import Any
 
 import structlog
 from asgi_correlation_id import correlation_id
-from starlette.responses import JSONResponse
+from fastapi import status
+from fastapi.responses import JSONResponse
 from starlette.types import ASGIApp, Message, Receive, Scope, Send
 from structlog.types import EventDict, Processor, WrappedLogger
 
@@ -227,7 +228,7 @@ class StructLogMiddleware:
 
             # エラーレスポンスを生成して返す
             response = JSONResponse(
-                status_code=500,
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={
                     "error": "Internal Server Error",
                     "message": "Unexpected error occurred.",
@@ -277,3 +278,6 @@ def get_path_with_query_string(scope: Scope) -> str:
             path_with_query_string, scope["query_string"].decode("ascii")
         )
     return path_with_query_string
+
+
+__all__ = ["FastAPIStructLogger", "StructLogMiddleware"]

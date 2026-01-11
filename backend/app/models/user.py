@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from pydantic import field_validator
+from pydantic import BaseModel, field_validator
 from sqlmodel import Field
 
 from app.models import SQLModel
@@ -14,16 +14,32 @@ class UserBase(SQLModel):
         max_length=20,
     )
 
-
-class UserPublic(UserBase):
-    id: UUID = Field(primary_key=True)
-
     @field_validator("name", mode="before")
     @classmethod
     def normalize_name(cls, v: str) -> str:
         if isinstance(v, str):
             return v.lower()
         return v
+
+
+class UserCreate(UserBase):
+    email: str
+    password: str = Field(min_length=6, max_length=72)
+
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+
+class UserSession(BaseModel):
+    user_id: UUID
+    access_token: str
+    refresh_token: str
+
+
+class UserPublic(UserBase):
+    id: UUID = Field(primary_key=True)
 
 
 class UserPrivate(UserPublic):

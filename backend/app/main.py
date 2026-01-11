@@ -1,15 +1,64 @@
 from asgi_correlation_id import CorrelationIdMiddleware
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from supabase import AuthApiError
 
-from app.core.logger import FastAPIStructLogger, StructLogMiddleware
+from app.core import FastAPIStructLogger, StructLogMiddleware
+from app.models.errors import (
+    InvalidCredentialsError,
+    MessageRespError,
+    RefreshTokenNotFoundError,
+    SupabaseErrorCode,
+    UserAlreadyExistsError,
+)
+from app.routers import auth, user
 
 
 app = FastAPI(title="MultiScheduler API")
 
 app.add_middleware(StructLogMiddleware)
 app.add_middleware(CorrelationIdMiddleware)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 log = FastAPIStructLogger()
+
+
+@app.exception_handler(MessageRespError)
+async def message_resp_error_handler(
+    _request: Request, e: MessageRespError
+) -> JSONResponse:
+    return e.message_resp.as_response()
+
+
+@app.exception_handler(AuthApiError)
+async def auth_api_error_handler(
+    _request: Request, e: AuthApiError
+) -> JSONResponse | AuthApiError:
+
+    if e.code == SupabaseErrorCode.USER_ALREADY_EXISTS.value:
+        log.debug("user already exists error during auth")
+        return UserAlreadyExistsError().as_response()
+
+    if e.code == SupabaseErrorCode.INVALID_CREDENTIALS.value:
+        log.debug("invalid credentials error during auth")
+        return InvalidCredentialsError().as_response()
+
+    if e.code == SupabaseErrorCode.REFRESH_TOKEN_NOT_FOUND.value:  # type: ignore[comparison-overlap]
+        log.debug("refresh token not found error during auth")
+        return RefreshTokenNotFoundError().as_response()
+
+    raise e
+
+
+app.include_router(user.router)
+app.include_router(auth.router)
 
 
 @app.get("/")

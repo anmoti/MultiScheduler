@@ -104,6 +104,9 @@ class Settings(BaseSettings):
             file_secret_settings,
         )
 
+    def is_dev(self) -> bool:
+        return self.env == DEV
+
 
 settings = Settings()
 
