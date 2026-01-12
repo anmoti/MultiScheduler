@@ -6,6 +6,7 @@ from sqlmodel import Field, Relationship
 
 from app.models import SQLModel
 from app.models.links import UserCalendarLink
+from app.models.mixins import TimestampMixin
 
 
 if TYPE_CHECKING:
@@ -52,7 +53,7 @@ class UserPrivate(UserPublic):
     nickname: str
 
 
-class User(UserPrivate, table=True):
+class User(UserPrivate, TimestampMixin, table=True):
     calendars: list["Calendar"] = Relationship(
         back_populates="users", link_model=UserCalendarLink
     )
