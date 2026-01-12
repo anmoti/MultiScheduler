@@ -1,9 +1,15 @@
+from typing import TYPE_CHECKING
 from uuid import UUID
 
 from pydantic import BaseModel, field_validator
-from sqlmodel import Field
+from sqlmodel import Field, Relationship
 
 from app.models import SQLModel
+from app.models.links import UserCalendarLink
+
+
+if TYPE_CHECKING:
+    from app.models.calendar import Calendar
 
 
 class UserBase(SQLModel):
@@ -47,4 +53,6 @@ class UserPrivate(UserPublic):
 
 
 class User(UserPrivate, table=True):
-    pass
+    calendars: list["Calendar"] = Relationship(
+        back_populates="users", link_model=UserCalendarLink
+    )
