@@ -10,7 +10,7 @@ from app.services.calendar import CalendarServiceDep
 
 
 class EventService:
-    def __init__(self, session: SessionDep, calendar_service=CalendarServiceDep):
+    def __init__(self, session: SessionDep, calendar_service: CalendarServiceDep):
         self.session = session
         self.calendar_service = calendar_service
 

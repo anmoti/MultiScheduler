@@ -67,4 +67,3 @@ class CalendarService:
 
 
 CalendarServiceDep = Annotated[CalendarService, Depends(CalendarService)]
-CalendarServiceDep = Annotated[CalendarService, Depends(CalendarService)]
