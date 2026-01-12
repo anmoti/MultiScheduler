@@ -54,6 +54,8 @@ class UserPrivate(UserPublic):
 
 
 class User(UserPrivate, TimestampMixin, table=True):
+    __tablename__ = "user"
+
     calendars: list["Calendar"] = Relationship(
         back_populates="users", link_model=UserCalendarLink
     )
