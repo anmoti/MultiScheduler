@@ -21,7 +21,7 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
     });
     try {
-      final authRepo = AuthRemoteRepository(dio, TokenRepository());
+      final authRepo = AuthRemoteRepository(client, TokenRepository());
       await authRepo.signin(_emailController.text, _passwordController.text);
       if (mounted) {
         context.go('/home');

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:multi_scheduler/api/generated/multi_scheduler_client.dart';
 import 'package:multi_scheduler/api/interceptors/auth_interceptor.dart';
 import 'package:multi_scheduler/data/repositories/auth_repository.dart';
 
@@ -14,3 +15,5 @@ void configureDio() {
   final tokenRepository = TokenRepository();
   dio.interceptors.add(AuthInterceptor(dio, tokenRepository));
 }
+
+final client = MultiSchedulerClient(dio);

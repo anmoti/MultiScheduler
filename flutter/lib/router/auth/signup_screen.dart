@@ -22,7 +22,7 @@ class _SignupScreenState extends State<SignupScreen> {
       _isLoading = true;
     });
     try {
-      final authRepo = AuthRemoteRepository(dio, TokenRepository());
+      final authRepo = AuthRemoteRepository(client, TokenRepository());
       await authRepo.signup(
         _nameController.text,
         _emailController.text,
