@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:multi_scheduler/helper/time.dart';
 
 class CalendarWidget extends StatefulWidget {
-  const CalendarWidget({super.key});
+  const CalendarWidget({super.key, this.events = const []});
+
+  final List<Event> events;
 
   @override
   State<CalendarWidget> createState() => _CalendarWidgetState();
@@ -16,10 +18,13 @@ class _CalendarWidgetState extends State<CalendarWidget> {
     return Column(
       children: [
         CalendarHeader(startOfWeek: _startOfWeek),
-        CalendarRangeView(
-          startOfWeek: _startOfWeek,
-          startDate: DateTime(2025, 11, 7),
-          endDate: DateTime(2025, 12, 1),
+        Expanded(
+          child: CalendarRangeView(
+            startOfWeek: _startOfWeek,
+            startDate: DateTime.now().subtract(const Duration(days: 3)),
+            endDate: DateTime.now().add(const Duration(days: 30)),
+            events: widget.events,
+          ),
         ),
       ],
     );
@@ -87,49 +92,18 @@ class CalendarHeader extends StatelessWidget {
 }
 
 class CalendarRangeView extends StatelessWidget {
-  CalendarRangeView({
+  const CalendarRangeView({
     required this.startOfWeek,
     required this.startDate,
     required this.endDate,
+    required this.events,
     super.key,
   });
 
   final WeekDay startOfWeek;
   final DateTime startDate;
   final DateTime endDate;
-
-  final List<Event> events = [
-    Event(
-      'ミーティング1',
-      DateTime(2025, 11, 30, 10, 0),
-      DateTime(2025, 11, 30, 12, 0),
-      Colors.blue,
-    ),
-    Event(
-      '旅行',
-      DateTime(2025, 11, 1, 9, 0),
-      DateTime(2025, 12, 3, 10, 0),
-      Colors.purple,
-    ),
-    Event(
-      'ランチ1',
-      DateTime(2025, 12, 1, 12, 0),
-      DateTime(2025, 12, 1, 13, 0),
-      Colors.green,
-    ),
-    Event(
-      'ミーティング2',
-      DateTime(2025, 12, 2, 14, 0),
-      DateTime(2025, 12, 4, 15, 30),
-      Colors.blue,
-    ),
-    Event(
-      'ランチ2',
-      DateTime(2025, 12, 2, 12, 0),
-      DateTime(2025, 12, 2, 13, 0),
-      Colors.green,
-    ),
-  ];
+  final List<Event> events;
 
   static const double _dateHeaderHeight = 20.0;
   static const double _eventHeight = 20.0;
