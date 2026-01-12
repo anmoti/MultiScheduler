@@ -15,11 +15,17 @@ class SupabaseErrorCode(str, Enum):
 
 class Status(str, Enum):
     OK = "OK"
+
     NOT_AUTHENTICATED = "NOT_AUTHENTICATED"
     USERNAME_ALREADY_EXISTS = "USERNAME_ALREADY_EXISTS"
+    USER_NOT_FOUND = "USER_NOT_FOUND"
     USER_ALREADY_EXISTS = "USER_ALREADY_EXISTS"
     INVALID_CREDENTIALS = "INVALID_CREDENTIALS"
     REFRESH_TOKEN_NOT_FOUND = "REFRESH_TOKEN_NOT_FOUND"
+
+    CALENDAR_NOT_FOUND = "CALENDAR_NOT_FOUND"
+
+    EVENT_NOT_FOUND = "EVENT_NOT_FOUND"
 
 
 class MessageResp(BaseModel):
@@ -60,6 +66,13 @@ class UsernameAlreadyExistsError(MessageResp):
     message: str = "ユーザー名は既に存在します。"
 
 
+class UserNotFoundError(MessageResp):
+    status_code = status.HTTP_404_NOT_FOUND
+    status: Literal[Status.USER_NOT_FOUND] = Status.USER_NOT_FOUND
+    message: str = "ユーザーが見つかりません。"
+    user_id: str
+
+
 class UserAlreadyExistsError(MessageResp):
     status_code = status.HTTP_409_CONFLICT
     status: Literal[Status.USER_ALREADY_EXISTS] = Status.USER_ALREADY_EXISTS
@@ -76,3 +89,17 @@ class RefreshTokenNotFoundError(MessageResp):
     status_code = status.HTTP_401_UNAUTHORIZED
     status: Literal[Status.REFRESH_TOKEN_NOT_FOUND] = Status.REFRESH_TOKEN_NOT_FOUND
     message: str = "リフレッシュトークンが見つかりません。"
+
+
+class CalendarNotFoundError(MessageResp):
+    status_code = status.HTTP_404_NOT_FOUND
+    status: Literal[Status.CALENDAR_NOT_FOUND] = Status.CALENDAR_NOT_FOUND
+    message: str = "カレンダーが見つかりません。"
+    calendar_id: str
+
+
+class EventNotFoundError(MessageResp):
+    status_code = status.HTTP_404_NOT_FOUND
+    status: Literal[Status.EVENT_NOT_FOUND] = Status.EVENT_NOT_FOUND
+    message: str = "イベントが見つかりません。"
+    event_id: str

@@ -46,7 +46,7 @@ class UserSession(BaseModel):
 
 
 class UserPublic(UserBase):
-    id: UUID = Field(primary_key=True)
+    id: UUID
 
 
 class UserPrivate(UserPublic):
@@ -55,6 +55,8 @@ class UserPrivate(UserPublic):
 
 class User(UserPrivate, TimestampMixin, table=True):
     __tablename__ = "user"
+
+    id: UUID = Field(primary_key=True)
 
     calendars: list["Calendar"] = Relationship(
         back_populates="users", link_model=UserCalendarLink

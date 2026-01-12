@@ -12,7 +12,7 @@ from app.models.errors import (
     SupabaseErrorCode,
     UserAlreadyExistsError,
 )
-from app.routers import auth, user
+from app.routers import auth, calendar, user
 
 
 app = FastAPI(title="MultiScheduler API")
@@ -54,11 +54,13 @@ async def auth_api_error_handler(
         log.debug("refresh token not found error during auth")
         return RefreshTokenNotFoundError().as_response()
 
-    raise e
+    log.error("unhandled auth api error", code=e.code, dict=e.to_dict())
+    return JSONResponse(status_code=500, content={"message": "Internal server error"})
 
 
 app.include_router(user.router)
 app.include_router(auth.router)
+app.include_router(calendar.router)
 
 
 @app.get("/")

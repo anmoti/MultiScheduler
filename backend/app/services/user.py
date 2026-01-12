@@ -5,6 +5,8 @@ from fastapi import Depends
 from sqlmodel import select
 
 from app.deps import SessionDep
+from app.models.calendar import Calendar
+from app.models.errors import MessageRespError, UserNotFoundError
 from app.models.user import User, UserBase
 
 
@@ -27,9 +29,13 @@ class UserService:
 
         return user
 
-    def get_user(self, user_id: str) -> User | None:
-        """ユーザーを取得"""
-        return self.session.get(User, user_id)
+    def get_user(self, user_id: str) -> User:
+        """ユーザーを取得 (存在しない場合はエラーを返す)"""
+        user = self.session.get(User, user_id)
+        if not user:
+            raise MessageRespError(UserNotFoundError(user_id=user_id))
+
+        return user
 
     def has_user(self, user_id: str) -> bool:
         """ユーザーが存在するか"""
@@ -40,6 +46,11 @@ class UserService:
         """ユーザー名が存在するか"""
         stmt = select(User.id).where(User.name == name).limit(1)
         return self.session.exec(stmt).first() is not None
+
+    def list_calendars(self, user_id: str) -> list[Calendar]:
+        """ユーザーのカレンダー一覧を取得"""
+        user = self.get_user(user_id)
+        return user.calendars
 
 
 UserServiceDep = Annotated[UserService, Depends(UserService)]
