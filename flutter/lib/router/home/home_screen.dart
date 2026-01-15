@@ -1,4 +1,7 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:multi_scheduler/api/dio_client.dart';
 
 import 'package:multi_scheduler/api/generated/models/calendar_public.dart';
 import 'package:multi_scheduler/data/repositories/calendar_repository.dart';
@@ -11,7 +14,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final _repository = CalendarRepository();
+  final _repository = CalendarRepository(client);
   List<CalendarPublic> _calendars = [];
   bool _isLoading = true;
 
@@ -32,7 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     } catch (e) {
       // TODO: エラーハンドリング
-      print(e);
+      log(error: e, 'カレンダーの取得に失敗しました');
     } finally {
       setState(() {
         _isLoading = false;
@@ -88,8 +91,10 @@ class _HomeScreenState extends State<HomeScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  const Text('カレンダー一覧',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    'カレンダー一覧',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 8),
                   if (_calendars.isEmpty)
                     const Text('カレンダーがありません')

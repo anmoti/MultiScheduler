@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:multi_scheduler/api/dio_client.dart';
 import 'package:multi_scheduler/router/schedule/components/calendar_widget.dart';
 
 import 'package:multi_scheduler/api/generated/models/calendar_public.dart';
@@ -13,7 +14,7 @@ class ScheduleScreen extends StatefulWidget {
 }
 
 class _ScheduleScreenState extends State<ScheduleScreen> {
-  final _repository = CalendarRepository();
+  final _repository = CalendarRepository(client);
   List<CalendarPublic> _calendars = [];
   CalendarPublic? _selectedCalendar;
   List<Event> _events = [];

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multi_scheduler/api/dio_client.dart';
@@ -18,22 +20,26 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _isLoading = false;
 
   Future<void> _signup() async {
+    log("Signup button pressed");
     setState(() {
       _isLoading = true;
     });
     try {
+      log("Preparing to signup...");
       final authRepo = AuthRemoteRepository(client, TokenRepository());
       await authRepo.signup(
         _nameController.text,
         _emailController.text,
         _passwordController.text,
       );
+      log("Signup successful");
       if (mounted) {
         // After signup, maybe go to home or stay and tell user to confirm email?
         // Assuming auto-login or success moves to home.
         context.go('/home');
       }
     } catch (e) {
+      log("Signup failed with error: $e");
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -41,6 +47,7 @@ class _SignupScreenState extends State<SignupScreen> {
       }
     } finally {
       if (mounted) {
+        log("Resetting loading state");
         setState(() {
           _isLoading = false;
         });
