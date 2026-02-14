@@ -14,6 +14,15 @@ final dio = Dio(
 void configureDio() {
   dio.interceptors.clear();
   final tokenRepository = TokenRepository();
+  dio.interceptors.add(
+    LogInterceptor(
+      request: true,
+      requestHeader: true,
+      requestBody: true,
+      responseBody: true,
+      responseHeader: true,
+    ),
+  );
   dio.interceptors.add(AuthInterceptor(dio, tokenRepository));
 }
 

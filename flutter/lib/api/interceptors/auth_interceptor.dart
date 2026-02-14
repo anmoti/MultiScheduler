@@ -4,8 +4,11 @@ import 'package:multi_scheduler/data/repositories/auth_repository.dart';
 class AuthInterceptor extends QueuedInterceptor {
   final Dio dio;
   final TokenRepository repository;
+  late final Dio _refreshDio;
 
-  AuthInterceptor(this.dio, this.repository);
+  AuthInterceptor(this.dio, this.repository) {
+    _refreshDio = Dio(BaseOptions(baseUrl: dio.options.baseUrl));
+  }
 
   @override
   void onRequest(
@@ -29,9 +32,12 @@ class AuthInterceptor extends QueuedInterceptor {
 
   Future<void> _refreshTokens() async {
     try {
-      final response = await dio.post(
+      final refreshToken = await repository.getRefreshToken();
+      if (refreshToken == null) return;
+
+      final response = await _refreshDio.post(
         '/auth/refresh',
-        data: {'refresh_token': await repository.getRefreshToken()},
+        options: Options(headers: {'X-Refresh-Token': refreshToken}),
       );
 
       final newAccess = response.data['access_token'];

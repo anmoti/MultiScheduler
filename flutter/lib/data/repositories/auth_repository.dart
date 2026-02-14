@@ -29,7 +29,7 @@ class TokenRepository {
     try {
       final isExpired = JwtDecoder.isExpired(_accessToken!);
       final remaining = JwtDecoder.getRemainingTime(_accessToken!).inSeconds;
-      
+
       if (isExpired || remaining <= 30) {
         return false;
       }
