@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:multi_scheduler/api/dio_client.dart';
 
 import 'package:multi_scheduler/api/generated/models/calendar_public.dart';
+
 import 'package:multi_scheduler/data/repositories/calendar_repository.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,6 +22,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _fetchCalendars();
+    calendarNotifier.addListener(_onCalendarChanged);
+  }
+
+  @override
+  void dispose() {
+    calendarNotifier.removeListener(_onCalendarChanged);
+    super.dispose();
+  }
+
+  void _onCalendarChanged() {
     _fetchCalendars();
   }
 
@@ -80,6 +92,42 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _deleteCalendar(CalendarPublic calendar) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('カレンダー削除'),
+          content: Text('「${calendar.name}」を削除しますか？'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('キャンセル'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('削除'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      try {
+        await _repository.deleteCalendar(calendar.id);
+        _fetchCalendars();
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('削除に失敗しました: $e')));
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -92,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(16),
                 children: [
                   const Text(
-                    'カレンダー一覧',
+                    'カレンダー',
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
@@ -103,7 +151,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       (calendar) => Card(
                         child: ListTile(
                           title: Text(calendar.name),
-                          subtitle: Text(calendar.id),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: () => _deleteCalendar(calendar),
+                          ),
                         ),
                       ),
                     ),

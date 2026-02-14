@@ -75,6 +75,15 @@ abstract class FallbackClient {
     @DioOptions() RequestOptions? options,
   });
 
+  /// Delete Calendar.
+  ///
+  /// カレンダーを削除.
+  @DELETE('/calendars/{calendar_id}/')
+  Future<void> deleteCalendarCalendarsCalendarIdDelete({
+    @Path('calendar_id') required String calendarId,
+    @DioOptions() RequestOptions? options,
+  });
+
   /// List Events.
   ///
   /// イベント一覧を取得.

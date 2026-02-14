@@ -57,6 +57,12 @@ class CalendarService:
         self.session.refresh(calendar)
         return calendar
 
+    def delete_calendar(self, calendar_id: str) -> None:
+        """カレンダーを削除"""
+        calendar = self.get_calendar(calendar_id)
+        self.session.delete(calendar)
+        self.session.commit()
+
     def check_user_calendar_access(self, calendar_id: str, user_id: str) -> bool:
         """カレンダーへのユーザーのアクセス権を確認"""
         link = self.session.get(UserCalendarLink, (user_id, calendar_id))

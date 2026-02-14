@@ -207,6 +207,37 @@
             }
           }
         }
+      },
+      "delete": {
+        "summary": "Delete Calendar",
+        "description": "\u30ab\u30ec\u30f3\u30c0\u30fc\u3092\u524a\u9664",
+        "operationId": "delete_calendar_calendars__calendar_id___delete",
+        "parameters": [
+          {
+            "name": "calendar_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Calendar Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/calendars/{calendar_id}/events": {

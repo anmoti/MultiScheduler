@@ -3,6 +3,7 @@ import 'package:multi_scheduler/api/dio_client.dart';
 import 'package:multi_scheduler/router/schedule/components/calendar_widget.dart';
 
 import 'package:multi_scheduler/api/generated/models/calendar_public.dart';
+
 import 'package:multi_scheduler/data/repositories/calendar_repository.dart';
 import 'package:multi_scheduler/helper/time.dart';
 
@@ -22,6 +23,17 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   @override
   void initState() {
     super.initState();
+    _fetchCalendars();
+    calendarNotifier.addListener(_onCalendarChanged);
+  }
+
+  @override
+  void dispose() {
+    calendarNotifier.removeListener(_onCalendarChanged);
+    super.dispose();
+  }
+
+  void _onCalendarChanged() {
     _fetchCalendars();
   }
 

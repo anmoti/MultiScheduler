@@ -51,6 +51,15 @@ async def update_calendar(
     return CalendarPublic.model_validate(calendar)
 
 
+@router.delete("/", status_code=204)
+async def delete_calendar(
+    calendar_id: str,
+    calendar_service: CalendarServiceDep,
+) -> None:
+    """カレンダーを削除"""
+    calendar_service.delete_calendar(calendar_id)
+
+
 @router.get("/events")
 async def list_events(
     calendar_id: str,

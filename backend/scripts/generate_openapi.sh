@@ -14,6 +14,6 @@ python scripts/generate_openapi.py
 
 cd ../flutter
 
-dart run swagger_parser
+fvm dart run swagger_parser
 
 fvm dart run build_runner build --delete-conflicting-outputs

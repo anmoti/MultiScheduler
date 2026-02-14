@@ -208,6 +208,29 @@ class _FallbackClient implements FallbackClient {
   }
 
   @override
+  Future<void> deleteCalendarCalendarsCalendarIdDelete({
+    required String calendarId,
+    RequestOptions? options,
+  }) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    queryParameters.removeWhere((k, v) => v == null);
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final newOptions = newRequestOptions(options);
+    newOptions.extra.addAll(_extra);
+    newOptions.headers.addAll(_dio.options.headers);
+    newOptions.headers.addAll(_headers);
+    final _options = newOptions.copyWith(
+      method: 'DELETE',
+      baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl),
+      queryParameters: queryParameters,
+      path: '/calendars/${calendarId}/',
+    )..data = _data;
+    await _dio.fetch<void>(_options);
+  }
+
+  @override
   Future<List<EventPublic>> listEventsCalendarsCalendarIdEventsGet({
     required String calendarId,
     RequestOptions? options,
