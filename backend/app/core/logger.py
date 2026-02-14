@@ -148,6 +148,9 @@ def setup_logging() -> None:
     logging.getLogger("uvicorn.access").handlers.clear()
     logging.getLogger("uvicorn.access").propagate = False
 
+    # httpcore / httpx の詳細デバッグログを抑制
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
+
 
 setup_logging()
 
