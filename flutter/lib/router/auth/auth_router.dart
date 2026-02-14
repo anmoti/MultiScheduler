@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:multi_scheduler/router/auth/login_screen.dart';
+import 'package:multi_scheduler/router/auth/signup_screen.dart';
 
 part 'auth_router.g.dart';
 
@@ -22,6 +23,6 @@ class SignupRoute extends GoRouteData with $SignupRoute {
 
   @override
   Widget build(BuildContext context, GoRouterState state) {
-    return LoginScreen();
+    return SignupScreen();
   }
 }
